@@ -1,0 +1,420 @@
+<!-- templates/identity_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if identity %}Edit Identity{% else %}Create Identity{% endif %} - Identity Manager
+{% endblock %}
+
+{% block content %}
+<div x-data="identityForm()" class="max-w-4xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                {% if identity %}Edit Identity{% else %}Create New Identity{% endif %}
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">
+                Configure your identity for different contexts and applications
+            </p>
+        </div>
+
+        <form @submit.prevent="saveIdentity" class="p-6 space-y-6">
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Context *</label>
+                    <select x-model="formData.context" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for value, label in context_choices %}
+                            <option value="{{ value }}" {% if identity and identity.context == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Choose the context where this identity will be used</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Locale</label>
+                    <input
+                            x-model="formData.locale"
+                            type="text"
+                            placeholder="en-US"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Language and region code (e.g., en-US, fr-FR)</p>
+                </div>
+            </div>
+
+            <!-- Name Information -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Name Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Given Name *</label>
+                        <input
+                                x-model="formData.given_name"
+                                type="text"
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Middle Name</label>
+                        <input
+                                x-model="formData.middle_name"
+                                type="text"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Family Name *</label>
+                        <input
+                                x-model="formData.family_name"
+                                type="text"
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Name</label>
+                        <input
+                                x-model="formData.preferred_name"
+                                type="text"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Name you prefer to be called</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input
+                                x-model="formData.title"
+                                type="text"
+                                placeholder="Dr., Mr., Ms., etc."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Suffix</label>
+                        <input
+                                x-model="formData.suffix"
+                                type="text"
+                                placeholder="Jr., Sr., III, etc."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                        <input
+                                x-model="formData.display_name"
+                                type="text"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Override the generated full name</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nickname</label>
+                        <input
+                                x-model="formData.nickname"
+                                type="text"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Personal Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pronouns</label>
+                        <input
+                                x-model="formData.pronouns"
+                                type="text"
+                                placeholder="they/them, she/her, he/him"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input
+                                x-model="formData.email"
+                                type="email"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                        <input
+                                x-model="formData.phone"
+                                type="tel"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                        <input
+                                x-model="formData.website"
+                                type="url"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Avatar URL</label>
+                    <input
+                            x-model="formData.avatar_url"
+                            type="url"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div x-show="formData.avatar_url" class="mt-2">
+                        <img :src="formData.avatar_url" alt="Avatar preview" class="w-16 h-16 rounded-full object-cover">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                    <textarea
+                            x-model="formData.bio"
+                            rows="3"
+                            maxlength="500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1" x-text="`${(formData.bio || '').length}/500 characters`"></p>
+                </div>
+            </div>
+
+            <!-- Privacy Settings -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Privacy & Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+                        <select x-model="formData.visibility" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            {% for value, label in visibility_choices %}
+                                <option value="{{ value }}" {% if identity and identity.visibility == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-4 pt-6">
+                        <label class="flex items-center">
+                            <input
+                                    x-model="formData.is_primary"
+                                    type="checkbox"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Set as primary identity</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input
+                                    x-model="formData.is_active"
+                                    type="checkbox"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Active</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Attributes -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Custom Attributes</h3>
+                <div class="space-y-3">
+                    <template x-for="(attr, index) in customAttributes" :key="index">
+                        <div class="flex items-center space-x-3">
+                            <input
+                                    x-model="attr.key"
+                                    type="text"
+                                    placeholder="Attribute name"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <input
+                                    x-model="attr.value"
+                                    type="text"
+                                    placeholder="Attribute value"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <button
+                                    @click="removeCustomAttribute(index)"
+                                    type="button"
+                                    class="text-red-600 hover:text-red-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                    <button
+                            @click="addCustomAttribute"
+                            type="button"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Custom Attribute
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div x-show="previewData" class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Preview</h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-medium text-gray-900" x-text="getFullName()"></h4>
+                    <p class="text-sm text-gray-600" x-text="`Context: ${formData.context} | Visibility: ${formData.visibility}`"></p>
+                    <div x-show="formData.pronouns" class="text-sm text-gray-600" x-text="`Pronouns: ${formData.pronouns}`"></div>
+                    <div x-show="formData.bio" class="text-sm text-gray-600 mt-2" x-text="formData.bio"></div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Dashboard
+                </a>
+
+                <div class="flex space-x-3">
+                    <button
+                            @click="previewIdentity"
+                            type="button"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Preview
+                    </button>
+                    <button
+                            type="submit"
+                            :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
+                        <svg x-show="loading" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="loading ? 'Saving...' : ({% if identity %}'Update Identity'{% else %}'Create Identity'{% endif %})"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function identityForm() {
+            return {
+                loading: false,
+                previewData: null,
+                formData: {
+                    context: '{{ identity.context|default:"display" }}',
+                    locale: '{{ identity.locale|default:"en-US" }}',
+                    given_name: '{{ identity.given_name|default:"" }}',
+                    family_name: '{{ identity.family_name|default:"" }}',
+                    middle_name: '{{ identity.middle_name|default:"" }}',
+                    preferred_name: '{{ identity.preferred_name|default:"" }}',
+                    display_name: '{{ identity.display_name|default:"" }}',
+                    title: '{{ identity.title|default:"" }}',
+                    suffix: '{{ identity.suffix|default:"" }}',
+                    nickname: '{{ identity.nickname|default:"" }}',
+                    pronouns: '{{ identity.pronouns|default:"" }}',
+                    email: '{{ identity.email|default:"" }}',
+                    phone: '{{ identity.phone|default:"" }}',
+                    website: '{{ identity.website|default:"" }}',
+                    avatar_url: '{{ identity.avatar_url|default:"" }}',
+                    bio: '{{ identity.bio|default:"" }}',
+                    visibility: '{{ identity.visibility|default:"private" }}',
+                    is_primary: {{ identity.is_primary|default:False|yesno:"true,false" }},
+                    is_active: {{ identity.is_active|default:True|yesno:"true,false" }}
+                },
+                customAttributes: [],
+
+                init() {
+                    // Load existing custom attributes
+                    {% if identity.custom_attributes %}
+                        const attrs = {{ identity.custom_attributes|safe }};
+                        this.customAttributes = Object.entries(attrs).map(([key, value]) => ({key, value}));
+                    {% endif %}
+                },
+
+                getFullName() {
+                    let parts = [];
+                    if (this.formData.title) parts.push(this.formData.title);
+
+                    if (this.formData.display_name) {
+                        return this.formData.display_name;
+                    }
+
+                    if (this.formData.preferred_name && ['social', 'display'].includes(this.formData.context)) {
+                        parts.push(this.formData.preferred_name);
+                    } else {
+                        parts.push(this.formData.given_name);
+                    }
+
+                    if (this.formData.middle_name && this.formData.context === 'legal') {
+                        parts.push(this.formData.middle_name);
+                    }
+
+                    parts.push(this.formData.family_name);
+
+                    if (this.formData.suffix) parts.push(this.formData.suffix);
+
+                    return parts.filter(p => p).join(' ');
+                },
+
+                addCustomAttribute() {
+                    this.customAttributes.push({ key: '', value: '' });
+                },
+
+                removeCustomAttribute(index) {
+                    this.customAttributes.splice(index, 1);
+                },
+
+                previewIdentity() {
+                    this.previewData = {
+                        ...this.formData,
+                        full_name: this.getFullName(),
+                        custom_attributes: this.getCustomAttributesObject()
+                    };
+                },
+
+                getCustomAttributesObject() {
+                    const obj = {};
+                    this.customAttributes.forEach(attr => {
+                        if (attr.key && attr.value) {
+                            obj[attr.key] = attr.value;
+                        }
+                    });
+                    return obj;
+                },
+
+                async saveIdentity() {
+                    this.loading = true;
+
+                    try {
+                        const payload = {
+                            ...this.formData,
+                            custom_attributes: this.getCustomAttributesObject(),
+                            {% if identity %}identity_id: {{ identity.id }}{% endif %}
+                        };
+
+                        const response = await fetch('/ajax/identity/update/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showNotification('Identity saved successfully!');
+                            // Redirect to dashboard or stay on edit page
+                            {% if not identity %}
+                                window.location.href = '/identity/' + data.identity_id + '/edit/';
+                            {% endif %}
+                        } else {
+                            showNotification(data.error || 'Failed to save identity', 'error');
+                        }
+                    } catch (error) {
+                        showNotification('Network error occurred', 'error');
+                        console.error('Error:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
+{% endblock %}
