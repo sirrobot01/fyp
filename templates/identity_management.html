@@ -1,0 +1,339 @@
+<!-- templates/identity_management.html -->
+{% extends 'base.html' %}
+
+{% block title %}Identity Management - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Identity Management</h2>
+                <p class="text-gray-600">View and verify user identities</p>
+            </div>
+            <a href="{% url 'admin-dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors">
+                ← Back to Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search Identities</label>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Name, email, username..."
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Context</label>
+                <select name="context" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Contexts</option>
+                    {% for value, label in context_choices %}
+                        <option value="{{ value }}" {% if context_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Verification Status</label>
+                <select name="verified" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Statuses</option>
+                    <option value="verified" {% if verification_filter == 'verified' %}selected{% endif %}>Verified</option>
+                    <option value="unverified" {% if verification_filter == 'unverified' %}selected{% endif %}>Unverified</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors mr-2">
+                    Search
+                </button>
+                <a href="{% url 'identity-management' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Identities Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">
+                Identities ({{ page_obj.paginator.count }} total)
+            </h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Identity</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Context</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                {% for identity in page_obj %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {% if identity.avatar_url %}
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <img class="h-10 w-10 rounded-full object-cover" src="{{ identity.avatar_url }}" alt="Avatar">
+                                    </div>
+                                {% else %}
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <span class="text-sm font-medium text-gray-700">
+                                            {{ identity.given_name.0|upper }}{{ identity.family_name.0|upper }}
+                                        </span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ identity.get_full_name }}</div>
+                                    {% if identity.email %}
+                                        <div class="text-sm text-gray-500">{{ identity.email }}</div>
+                                    {% endif %}
+                                    {% if identity.pronouns %}
+                                        <div class="text-xs text-gray-400">{{ identity.pronouns }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ identity.user.username }}</div>
+                            <div class="text-sm text-gray-500">{{ identity.user.get_full_name|default:identity.user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="context-badge context-{{ identity.context }}">
+                                {{ identity.get_context_display }}
+                            </span>
+                            {% if identity.is_primary %}
+                                <div class="text-xs text-blue-600 mt-1">Primary</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col space-y-1">
+                                {% if identity.is_verified %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✓ Verified
+                                </span>
+                                    {% if identity.verified_by %}
+                                        <div class="text-xs text-gray-500">by {{ identity.verified_by.username }}</div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                                {% endif %}
+
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ identity.get_visibility_display }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>{{ identity.created_at|date:"M d, Y" }}</div>
+                            <div class="text-xs">{{ identity.created_at|timesince }} ago</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col space-y-1">
+                                {% if not identity.is_verified %}
+                                    <a href="{% url 'verify-identity' identity.id %}" class="text-green-600 hover:text-green-900">Verify</a>
+                                {% endif %}
+                                <button onclick="viewIdentityDetails({{ identity.id }})" class="text-blue-600 hover:text-blue-900 text-left">View Details</button>
+                                <a href="{% url 'user-detail-admin' identity.user.id %}" class="text-indigo-600 hover:text-indigo-900">View User</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            No identities found matching your criteria.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination (same as user management) -->
+        {% if page_obj.has_other_pages %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&context={{ context_filter }}&verified={{ verification_filter }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&context={{ context_filter }}&verified={{ verification_filter }}"
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&context={{ context_filter }}&verified={{ verification_filter }}"
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Previous</span>
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                               {{ num }}
+                           </span>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="?page={{ num }}&search={{ search_query }}&context={{ context_filter }}&verified={{ verification_filter }}"
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    {{ num }}
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&context={{ context_filter }}&verified={{ verification_filter }}"
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Next</span>
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+    <!-- Identity Details Modal -->
+    <div id="identityDetailsModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black opacity-50" onclick="closeIdentityDetailsModal()"></div>
+            <div class="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Identity Details</h3>
+                    <button onclick="closeIdentityDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="identityDetailsContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        async function viewIdentityDetails(identityId) {
+            const modal = document.getElementById('identityDetailsModal');
+            const content = document.getElementById('identityDetailsContent');
+
+            try {
+                const response = await fetch(`/admin-panel/identities/${identityId}/details/`);
+                const data = await response.json();
+
+                if (data.success) {
+                    content.innerHTML = `
+               <div class="space-y-4">
+                   <div class="grid grid-cols-2 gap-4">
+                       <div>
+                           <h4 class="font-medium text-gray-900">Basic Information</h4>
+                           <dl class="mt-2 space-y-1">
+                               <div><dt class="text-sm text-gray-500">Full Name:</dt><dd class="text-sm text-gray-900">${data.identity.full_name}</dd></div>
+                               <div><dt class="text-sm text-gray-500">Context:</dt><dd class="text-sm text-gray-900">${data.identity.context}</dd></div>
+                               <div><dt class="text-sm text-gray-500">Locale:</dt><dd class="text-sm text-gray-900">${data.identity.locale}</dd></div>
+                               <div><dt class="text-sm text-gray-500">Visibility:</dt><dd class="text-sm text-gray-900">${data.identity.visibility}</dd></div>
+                           </dl>
+                       </div>
+                       <div>
+                           <h4 class="font-medium text-gray-900">Contact Information</h4>
+                           <dl class="mt-2 space-y-1">
+                               <div><dt class="text-sm text-gray-500">Email:</dt><dd class="text-sm text-gray-900">${data.identity.email || 'Not provided'}</dd></div>
+                               <div><dt class="text-sm text-gray-500">Phone:</dt><dd class="text-sm text-gray-900">${data.identity.phone || 'Not provided'}</dd></div>
+                               <div><dt class="text-sm text-gray-500">Website:</dt><dd class="text-sm text-gray-900">${data.identity.website || 'Not provided'}</dd></div>
+                               <div><dt class="text-sm text-gray-500">Pronouns:</dt><dd class="text-sm text-gray-900">${data.identity.pronouns || 'Not provided'}</dd></div>
+                           </dl>
+                       </div>
+                   </div>
+                   
+                   ${data.identity.bio ? `
+                   <div>
+                       <h4 class="font-medium text-gray-900">Biography</h4>
+                       <p class="mt-2 text-sm text-gray-700">${data.identity.bio}</p>
+                   </div>
+                   ` : ''}
+                   
+                   ${data.identity.custom_attributes && Object.keys(data.identity.custom_attributes).length > 0 ? `
+                   <div>
+                       <h4 class="font-medium text-gray-900">Custom Attributes</h4>
+                       <dl class="mt-2 space-y-1">
+                           ${Object.entries(data.identity.custom_attributes).map(([key, value]) =>
+                        `<div><dt class="text-sm text-gray-500">${key}:</dt><dd class="text-sm text-gray-900">${value}</dd></div>`
+                    ).join('')}
+                       </dl>
+                   </div>
+                   ` : ''}
+                   
+                   <div>
+                       <h4 class="font-medium text-gray-900">Admin Information</h4>
+                       <dl class="mt-2 space-y-1">
+                           <div><dt class="text-sm text-gray-500">Created:</dt><dd class="text-sm text-gray-900">${new Date(data.identity.created_at).toLocaleString()}</dd></div>
+                           <div><dt class="text-sm text-gray-500">Updated:</dt><dd class="text-sm text-gray-900">${new Date(data.identity.updated_at).toLocaleString()}</dd></div>
+                           <div><dt class="text-sm text-gray-500">Verified:</dt><dd class="text-sm text-gray-900">${data.identity.is_verified ? 'Yes' : 'No'}</dd></div>
+                           ${data.identity.verified_by ? `<div><dt class="text-sm text-gray-500">Verified by:</dt><dd class="text-sm text-gray-900">${data.identity.verified_by}</dd></div>` : ''}
+                           ${data.identity.admin_notes ? `<div><dt class="text-sm text-gray-500">Admin Notes:</dt><dd class="text-sm text-gray-900">${data.identity.admin_notes}</dd></div>` : ''}
+                       </dl>
+                   </div>
+                   
+                   <div class="flex justify-end space-x-3 pt-4 border-t">
+                       ${!data.identity.is_verified ? `
+                       <a href="/admin-panel/verify/${data.identity.id}/" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors">
+                           Verify Identity
+                       </a>
+                       ` : ''}
+                       <a href="/identity/${data.identity.id}/edit/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
+                           Edit Identity
+                       </a>
+                   </div>
+               </div>
+           `;
+                } else {
+                    content.innerHTML = '<p class="text-red-600">Failed to load identity details.</p>';
+                }
+
+                modal.classList.remove('hidden');
+            } catch (error) {
+                content.innerHTML = '<p class="text-red-600">Error loading identity details.</p>';
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeIdentityDetailsModal() {
+            document.getElementById('identityDetailsModal').classList.add('hidden');
+        }
+    </script>
+{% endblock %}
