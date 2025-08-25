@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}OAuth Callback Demo{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="mt-4 text-2xl font-bold text-gray-900">Authentication Successful!</h2>
+                <p class="mt-2 text-gray-600">OAuth callback received from IMA</p>
+            </div>
+
+            <!-- Demo Data -->
+            <div class="space-y-4">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-green-800 mb-2">Received OAuth Data:</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-green-700">Authorization Code:</span>
+                            <code class="text-green-600 bg-white px-2 py-1 rounded border break-all max-w-xs">
+                                {{ code|truncatechars:20 }}...
+                            </code>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-green-700">State:</span>
+                            <code class="text-green-600 bg-white px-2 py-1 rounded border">{{ state }}</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-blue-800 mb-3">What happens next in a real app:</h3>
+                    <div class="space-y-3 text-sm text-blue-700">
+                        <div class="flex items-start">
+                            <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                            <div class="ml-3">
+                                <strong>Exchange code for token:</strong>
+                                <p class="text-xs text-blue-600 mt-1">POST to /o/token/ with the authorization code, client credentials, and redirect URI</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                            <div class="ml-3">
+                                <strong>Get user data:</strong>
+                                <p class="text-xs text-blue-600 mt-1">Use the access token to call /oauth/user/ to get the selected identity context data</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <span class="flex-shrink-0 w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+                            <div class="ml-3">
+                                <strong>Create/update account:</strong>
+                                <p class="text-xs text-blue-600 mt-1">Use the identity data to create or update the user's account in your application</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Code -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-800 mb-3">Sample Integration Code:</h3>
+                    <pre class="text-xs text-gray-700 overflow-x-auto"><code># Python example for token exchange
+import requests
+
+# Exchange authorization code for access token
+token_response = requests.post('{{ request.scheme }}://{{ request.get_host }}/o/token/', data={
+    'grant_type': 'authorization_code',
+    'code': '{{ code }}',
+    'redirect_uri': 'YOUR_REDIRECT_URI',
+    'client_id': 'YOUR_CLIENT_ID',
+    'client_secret': 'YOUR_CLIENT_SECRET',
+})
+
+access_token = token_response.json()['access_token']
+
+# Get user data with selected context
+user_response = requests.get('{{ request.scheme }}://{{ request.get_host }}/oauth/user/', headers={
+    'Authorization': f'Bearer {access_token}'
+})
+
+user_data = user_response.json()
+# user_data contains the identity info from the context the user selected</code></pre>
+                </div>
+
+                <!-- Mock User Data -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-yellow-800 mb-3">Sample User Data (what your app would receive):</h3>
+                    <pre class="text-xs text-gray-700 overflow-x-auto"><code>{
+    "id": 123,
+    "context": "professional",
+    "locale": "en-US", 
+    "full_name": "Dr. Jane Smith",
+    "given_name": "Jane",
+    "family_name": "Smith",
+    "title": "Dr.",
+    "email": "jane.smith@company.com",
+    "website": "https://janesmith.dev",
+    "bio": "Senior Software Engineer at TechCorp",
+    "username": "janesmith",
+    "is_active": true,
+    "context_used": "professional",
+    "date_joined": "2024-01-15T10:30:00Z"
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-6 flex space-x-3">
+                <a href="/oauth/demo/" 
+                   class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-md text-sm font-medium transition-colors">
+                    Try Again
+                </a>
+                <a href="{% url 'dashboard' %}" 
+                   class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-center py-2 px-4 rounded-md text-sm font-medium transition-colors">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
