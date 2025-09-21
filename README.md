@@ -188,7 +188,6 @@ cloc . --exclude-dir=.venv,staticfiles > cloc_summary.txt
 - `setup_admin`: Create admin user and setup
 - `create_samples`: Generate sample users and identities
 - `setup_oauth_demo`: Configure OAuth demo application
-- `update_oauth_demo`: Update OAuth demo configuration
 
 ## Security Features
 
@@ -197,15 +196,6 @@ cloc . --exclude-dir=.venv,staticfiles > cloc_summary.txt
 - **Audit Logging**: Complete access trail with IP and user agent tracking
 - **CSRF Protection**: Django CSRF middleware enabled
 - **Input Validation**: Comprehensive data validation and sanitization
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
 
 ## License
 
