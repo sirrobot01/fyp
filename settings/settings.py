@@ -26,7 +26,7 @@ SECRET_KEY = config("SECRET_KEY", default='django-insecure-2r8!sran&jr53@!#=v(-4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'host.docker.internal', 'fyp-l8ns.onrender.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'host.docker.internal', '.onrender.com']
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
